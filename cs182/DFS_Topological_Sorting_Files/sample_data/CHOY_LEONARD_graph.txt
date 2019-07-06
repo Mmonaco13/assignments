@@ -1,0 +1,15 @@
+7
+Mercury
+Venus
+Earth
+Mars
+Jupiter
+Saturn
+Pluto
+
+Mercury Venus
+Venus Earth
+Saturn Jupiter
+Jupiter Venus
+Earth Mars
+Mars Jupiter

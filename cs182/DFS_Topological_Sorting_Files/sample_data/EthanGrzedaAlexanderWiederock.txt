@@ -1,0 +1,31 @@
+11
+Pallet
+Viridian
+Pewter
+Cerulean
+Vermilion
+Lavender
+Celadon
+Saffron
+Fuschia
+Cinnabar
+Indigo
+
+Pallet Viridian
+Viridian Pewter
+Pewter Cerulean
+Cerulean Vermilion
+Vermilion Lavender
+Lavender Celadon
+Celadon Saffron
+Saffron Fuschia
+Fuschia Cinnabar
+Cinnabar Indigo
+Pallet Cinnabar
+Viridian Indigo
+Pewter Vermilion
+Cerulean Saffron
+Vermilion Saffron
+Vermilion Fuschia
+Lavender Saffron
+Lavender Fuschia

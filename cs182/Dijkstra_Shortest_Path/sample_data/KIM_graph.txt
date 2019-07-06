@@ -1,0 +1,26 @@
+11
+Horse
+Dolphin
+Cat
+Orca
+Rabbit
+Fox
+Leopard
+Panda
+Cheetah
+Otter
+Peacock
+
+Horse Dolphin 5
+Horse Panda 1
+Horse Peacock 2
+Dolphin Orca 4
+Dolphin Cat 3
+Dolphin Rabbit 6
+Cat Leopard 1
+Cat Peacock 3
+Orca Fox 2
+Rabbit Panda 4
+Fox Peacock 1
+Leopard Cheetah 7
+Otter Peacock 5
