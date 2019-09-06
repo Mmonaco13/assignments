@@ -37,9 +37,15 @@ void validate(string level, string tag, string args){
     }
     
     if(exists){
-        printf("<-- %s|%s|Y|%s\n", level.c_str(), tag.c_str(), args.c_str());
+        printf("<-- %s|%s|Y", level.c_str(), tag.c_str());
     }else{
-        printf("<-- %s|%s|N|%s\n", level.c_str(), tag.c_str(), args.c_str());
+        printf("<-- %s|%s|N", level.c_str(), tag.c_str());
+    }
+
+    if(!args.empty()){
+        printf("|%s\n", args.c_str());
+    }else{
+        printf("\n");
     }
 }
 
@@ -63,6 +69,8 @@ void parse(string nextLine){
 
     if(strcmp(args.c_str(), "INDI") == 0 || strcmp(args.c_str(), "FAM") == 0){
         validate(level, args, tag);
+    }else if(strcmp(tag.c_str(), "INDI") == 0 || strcmp(tag.c_str(), "FAM") == 0){
+        printf("<-- %s|%s|N|%s\n", level.c_str(), tag.c_str(), args.c_str());
     }else{
         validate(level, tag, args);
     }
@@ -80,4 +88,5 @@ int main(int argc, char** argv) {
         printf("--> %s\n", nextLine.c_str());
         parse(nextLine);
     }
+    return 0;
 }
