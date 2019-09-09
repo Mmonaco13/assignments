@@ -13,6 +13,10 @@ public class Swapper implements Runnable {
 
     @Override
     public void run() {
-        // TODO: Implement me!
+        char[] contentChar = content.toCharArray();
+        int length = interval.getY() - interval.getX() + 1;
+        for(int count = 0; count < length; count++){
+            buffer[count + offset] = contentChar[count + interval.getX()];
+        }
     }
 }
