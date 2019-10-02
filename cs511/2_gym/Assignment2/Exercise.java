@@ -13,6 +13,18 @@ public class Exercise {
         this.duration = duration;
     }
 
+    public Map<WeightPlateSize, Integer> getWeight() {
+        return weight;
+    }
+
+    public ApparatusType getApparatus() {
+        return at;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
     public static Exercise generateRandom(){
         ApparatusType arr[] = ApparatusType.values();
         Random rand = new Random(); 
