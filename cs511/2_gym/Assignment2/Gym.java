@@ -22,7 +22,7 @@ public class Gym implements Runnable {
             new Semaphore(5), new Semaphore(5), new Semaphore(5), new Semaphore(5), 
             new Semaphore(5)};
 
-    public Client makeClient() throws Exception {
+    public Client makeClient() throws InterruptedException {
         Random rand = new Random();
         Integer clientID = new Integer(111111);
         clientMutex.acquire();
@@ -36,7 +36,7 @@ public class Gym implements Runnable {
     }
 
     public void performExercise(int id, ApparatusType at, Map<WeightPlateSize, Integer> weight, 
-            int duration) throws Exception {
+            int duration) throws InterruptedException {
         
         int apparatusNum = 0;
         if(at == ApparatusType.LEGPRESSMACHINE){
@@ -57,8 +57,6 @@ public class Gym implements Runnable {
             apparatusNum = 7;
         }
 
-        apparatusKey[apparatusNum].acquire();
-
         boolean noPlates = true;
         while(noPlates){
             plateMutex.acquire();
@@ -77,11 +75,12 @@ public class Gym implements Runnable {
             plateMutex.release();
         }
         
+        apparatusKey[apparatusNum].acquire();
         System.out.println(id + " started using " + at + " with " + 
                 weight.get(WeightPlateSize.SMALL_3KG) + " Small 3kg weights, " + 
                 weight.get(WeightPlateSize.MEDIUM_5KG) + " Medium 5kg weight, and " + 
                 weight.get(WeightPlateSize.LARGE_10KG) + " Large 10kg weights.");
-        
+
         Thread.sleep(duration);
         
         System.out.println(id + " finished using " + at + " with " + 
@@ -90,7 +89,6 @@ public class Gym implements Runnable {
                 weight.get(WeightPlateSize.LARGE_10KG) + " Large 10kg weights.");
 
         plateMutex.acquire();
-
         noOfWeightPlates.put(WeightPlateSize.SMALL_3KG, 
                 noOfWeightPlates.get(WeightPlateSize.SMALL_3KG) + 
                 weight.get(WeightPlateSize.SMALL_3KG));
@@ -101,14 +99,11 @@ public class Gym implements Runnable {
                 noOfWeightPlates.get(WeightPlateSize.LARGE_10KG) + 
                 weight.get(WeightPlateSize.LARGE_10KG));
         
-        /*System.out.println(noOfWeightPlates.get(WeightPlateSize.SMALL_3KG));
-        System.out.println(noOfWeightPlates.get(WeightPlateSize.MEDIUM_5KG));
-        System.out.println(noOfWeightPlates.get(WeightPlateSize.LARGE_10KG));*/
         plateMutex.release();
         apparatusKey[apparatusNum].release();
     }
 
-    public void goToTheGym(Client user) throws Exception {
+    public void goToTheGym(Client user) throws InterruptedException {
     
         System.out.println(user.getId() + " entered the gym.");
         List<Exercise> routine = user.getRoutine();
@@ -134,7 +129,7 @@ public class Gym implements Runnable {
                 public void run(){
                     try {
                         goToTheGym(makeClient());
-                    } catch (Exception e) {
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     return;

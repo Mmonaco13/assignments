@@ -41,7 +41,7 @@ public class Exercise {
         genWeight.put(WeightPlateSize.MEDIUM_5KG, new Integer(noOf5));
         genWeight.put(WeightPlateSize.LARGE_10KG, new Integer(noOf10));
         
-        Exercise ret = new Exercise(arr[rand.nextInt(8)], genWeight, (rand.nextInt(10) + 1) * 1000);
+        Exercise ret = new Exercise(arr[rand.nextInt(8)], genWeight, (rand.nextInt(40) + 15) * 500);
 
         return ret;
     }
