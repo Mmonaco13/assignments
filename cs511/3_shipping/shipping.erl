@@ -5,33 +5,76 @@
 get_ship({_, Shipping_State}, Ship_ID) ->
     lists:keyfind(Ship_ID,#ship.id,Shipping_State#shipping_state.ships).
 
-%get_container(Shipping_State, Container_ID) ->
-%    io:format("Implement me!!"),
-%    error.
+get_container({_, Shipping_State}, Container_ID) ->
+    lists:keyfind(Container_ID,#container.id,Shipping_State#shipping_state.containers).
 
-%get_port(Shipping_State, Port_ID) ->
-%    io:format("Implement me!!"),
-%    error.
+get_port({_, Shipping_State}, Port_ID) ->
+    lists:keyfind(Port_ID,#port.id,Shipping_State#shipping_state.ports).
 
-%get_occupied_docks(Shipping_State, Port_ID) ->
-%    io:format("Implement me!!"),
-%    error.
+grabDocks([]) ->
+    [];
+grabDocks([{_,D,_} | TL]) ->
+    [D | grabDocks(TL)].
 
-%get_ship_location(Shipping_State, Ship_ID) ->
-%    io:format("Implement me!!"),
-%    error.
+get_occupied_docks({_, Shipping_State}, Port_ID) ->
+    PD = lists:filter(fun({P,_,_}) -> P==Port_ID end, Shipping_State#shipping_state.ship_locations),
+    grabDocks(PD).
 
-%get_container_weight(Shipping_State, Container_IDs) ->
-%    io:format("Implement me!!"),
-%    error.
+cutThree([{P,D,_}]) ->
+    {P,D}.
 
-%get_ship_weight(Shipping_State, Ship_ID) ->
-%    io:format("Implement me!!"),
-%    error.
+get_ship_location({_, Shipping_State}, Ship_ID) ->
+    cutThree(lists:filter(fun({_,_,S}) -> S==Ship_ID end, Shipping_State#shipping_state.ship_locations)).
 
-%load_ship(Shipping_State, Ship_ID, Container_IDs) ->
-%    io:format("Implement me!!"),
-%    error.
+get_container_weight({_,_Shipping_State}, []) ->
+    0;
+get_container_weight({_,Shipping_State}, [H | TL]) ->
+    (get_container({ok, Shipping_State}, H))#container.weight + get_container_weight({ok, Shipping_State}, TL).
+
+get_ship_weight({_,Shipping_State}, Ship_ID) ->
+    case maps:find(Ship_ID, Shipping_State#shipping_state.ship_inventory) of
+	{ok,R} -> get_container_weight({ok, Shipping_State},R);
+	error -> error
+    end.
+
+samePort(_,_,[]) ->
+    true;
+samePort(Shipping_State, {_,PortInv}, [H | TL]) ->
+    case lists:any(fun(I) -> I==H end, PortInv) of
+    true -> samePort(Shipping_State, {ok,PortInv}, TL);
+    false -> false;
+    error -> error
+    end.
+
+cutTwo({P,_}) ->
+    P.
+cutOne({_,P}) ->
+    P.
+
+len([]) ->
+    0;
+len([_H|T]) ->   %%% pattern for non-empty list
+    1+len(T).
+
+load_ship({_, Shipping_State}, Ship_ID, Container_IDs) ->
+    ShipPortNum = cutTwo(get_ship_location({ok, Shipping_State}, Ship_ID)),
+    PortInv = maps:find(ShipPortNum, Shipping_State#shipping_state.port_inventory),
+    SP = samePort(Shipping_State, PortInv, Container_IDs),
+    
+    ShipInv = cutOne(maps:find(Ship_ID, Shipping_State#shipping_state.ship_inventory)),
+    ShipCap = (get_ship({ok, Shipping_State}, Ship_ID))#ship.container_cap,
+    HC = ShipCap >= (len(Container_IDs) + len(ShipInv)),
+    case {SP, HC} of
+    {true,true} -> 
+        NewPI = maps:put(ShipPortNum,lists:subtract(cutOne(PortInv), Container_IDs),
+                 Shipping_State#shipping_state.port_inventory),
+        NewSI = maps:put(Ship_ID, lists:append(ShipInv,Container_IDs),
+                 Shipping_State#shipping_state.ship_inventory),
+        S1 = Shipping_State#shipping_state{port_inventory = NewPI},
+        S2 = S1#shipping_state{ship_inventory = NewSI},
+        {ok, S2};
+    {_,_} -> error
+    end.
 
 %unload_ship_all(Shipping_State, Ship_ID) ->
 %    io:format("Implement me!!"),
