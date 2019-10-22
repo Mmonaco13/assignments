@@ -37,11 +37,11 @@ get_ship_weight({_,Shipping_State}, Ship_ID) ->
 	error -> error
     end.
 
-samePort(_,_,[]) ->
+samePort(_,[]) ->
     true;
-samePort(Shipping_State, {_,PortInv}, [H | TL]) ->
+samePort({_,PortInv}, [H | TL]) ->
     case lists:any(fun(I) -> I==H end, PortInv) of
-    true -> samePort(Shipping_State, {ok,PortInv}, TL);
+    true -> samePort({ok,PortInv}, TL);
     false -> false;
     error -> error
     end.
@@ -59,7 +59,7 @@ len([_H|T]) ->   %%% pattern for non-empty list
 load_ship({_, Shipping_State}, Ship_ID, Container_IDs) ->
     ShipPortNum = cutTwo(get_ship_location({ok, Shipping_State}, Ship_ID)),
     PortInv = maps:find(ShipPortNum, Shipping_State#shipping_state.port_inventory),
-    SP = samePort(Shipping_State, PortInv, Container_IDs),
+    SP = samePort(PortInv, Container_IDs),
     
     ShipInv = cutOne(maps:find(Ship_ID, Shipping_State#shipping_state.ship_inventory)),
     ShipCap = (get_ship({ok, Shipping_State}, Ship_ID))#ship.container_cap,
@@ -76,20 +76,58 @@ load_ship({_, Shipping_State}, Ship_ID, Container_IDs) ->
     {_,_} -> error
     end.
 
-%unload_ship_all(Shipping_State, Ship_ID) ->
-%    io:format("Implement me!!"),
-%    error.
+unload_ship_all({_, Shipping_State}, Ship_ID) ->
+    ShipPortNum = cutTwo(get_ship_location({ok, Shipping_State}, Ship_ID)),
+    PortInv = cutOne(maps:find(ShipPortNum, Shipping_State#shipping_state.port_inventory)),
+    ShipInv = cutOne(maps:find(Ship_ID, Shipping_State#shipping_state.ship_inventory)),
+    PortCap = (get_port({ok, Shipping_State}, ShipPortNum))#port.container_cap,
+    
+    HC = PortCap >= (len(PortInv) + len(ShipInv)),
+    case HC of
+    true ->
+        NewPI = maps:put(ShipPortNum,lists:append(PortInv, ShipInv),
+                 Shipping_State#shipping_state.port_inventory),
+        NewSI = maps:put(Ship_ID, [], Shipping_State#shipping_state.ship_inventory),
+        S1 = Shipping_State#shipping_state{port_inventory = NewPI},
+        S2 = S1#shipping_state{ship_inventory = NewSI},
+        {ok, S2};
+    false -> error
+    end.
 
-%unload_ship(Shipping_State, Ship_ID, Container_IDs) ->
-%    io:format("Implement me!!"),
-%    error.
+unload_ship({_,Shipping_State}, Ship_ID, Container_IDs) ->
+    ShipPortNum = cutTwo(get_ship_location({ok, Shipping_State}, Ship_ID)),
+    PortInv = cutOne(maps:find(ShipPortNum, Shipping_State#shipping_state.port_inventory)),
+    ShipInv = cutOne(maps:find(Ship_ID, Shipping_State#shipping_state.ship_inventory)),
+    PortCap = (get_port({ok, Shipping_State}, ShipPortNum))#port.container_cap,
+    
+    SP = samePort({ok, ShipInv}, Container_IDs),
+    HC = PortCap >= (len(Container_IDs) + len(PortInv)),
+    
+    case {SP, HC} of
+    {true,true} -> 
+        NewPI = maps:put(ShipPortNum,lists:append(PortInv, Container_IDs),
+                 Shipping_State#shipping_state.port_inventory),
+        NewSI = maps:put(Ship_ID, lists:subtract(ShipInv,Container_IDs),
+                 Shipping_State#shipping_state.ship_inventory),
+        S1 = Shipping_State#shipping_state{port_inventory = NewPI},
+        S2 = S1#shipping_state{ship_inventory = NewSI},
+        {ok, S2};
+    {_,_} -> error
+    end.
 
-%set_sail(Shipping_State, Ship_ID, {Port_ID, Dock}) ->
-%    io:format("Implement me!!"),
-%    error.
-
-
-
+set_sail({_,Shipping_State}, Ship_ID, {Port_ID, Dock}) ->
+    Occupied = lists:member(Dock, get_occupied_docks({ok,Shipping_State}, Port_ID)),
+    case Occupied of
+    false ->
+        NewLoc = {Port_ID, Dock, Ship_ID},
+        ShipLoc = get_ship_location({ok,Shipping_State}, Ship_ID),
+        OldLoc = list_to_tuple(lists:append(tuple_to_list(ShipLoc),[Ship_ID])),
+        NewShipLoc = lists:subtract(lists:append(
+                Shipping_State#shipping_state.ship_locations, [NewLoc]),[OldLoc]),
+        S1 = Shipping_State#shipping_state{ship_locations = NewShipLoc},
+        {ok, S1};
+    _ -> error
+    end.
 
 %% Determines whether all of the elements of Sub_List are also elements of Target_List
 %% @returns true is all elements of Sub_List are members of Target_List; false otherwise
