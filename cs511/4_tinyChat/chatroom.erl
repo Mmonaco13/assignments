@@ -54,8 +54,18 @@ do_update_nick(State, ClientPID, NewNick) ->
     NewState = State#chat_st{registrations = maps:update(ClientPID, NewNick, State#chat_st.registrations)},
     NewState.
 
+%% Send message to list of receiving clients
+sendMessage(_Ref, _Message, _State, _CliNick, []) ->
+    ok;
+sendMessage(Ref, Message, State, CliNick, [H|T]) ->
+    H!{request, self(), Ref, {incoming_msg, CliNick, State#chat_st.name, Message}},
+    sendMessage(Ref, Message, State, CliNick, T).
+
 %% This function should update all clients in chatroom with new message
 %% (read assignment specs for details)
 do_propegate_message(State, Ref, ClientPID, Message) ->
-    io:format("chatroom:do_propegate_message(...): IMPLEMENT ME~n"),
-    State.
+    ClientPID!{self(), Ref, ack_msg},
+    {ok, CliNick} = maps:find(ClientPID, State#chat_st.registrations),
+    sendMessage(Ref, Message, State, CliNick, lists:subtract(maps:keys(State#chat_st.registrations),[ClientPID])),
+    NewState = State#chat_st{history = lists:append(State#chat_st.history, [CliNick, Message])},
+    NewState.

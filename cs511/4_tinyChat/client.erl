@@ -163,16 +163,26 @@ do_new_nick(State, Ref, NewNick) ->
 
 %% executes send message protocol from client perspective
 do_msg_send(State, Ref, ChatName, Message) ->
-    io:format("client:do_new_nick(...): IMPLEMENT ME~n"),
-    {{dummy_target, dummy_response}, State}.
+    {_X, ChatPID} = maps:find(ChatName, State#cl_st.con_ch),
+    ChatPID!{self(), Ref, message, Message},
+    receive
+        {Chat, Ref, ack_msg} ->
+            whereis(list_to_atom(State#cl_st.gui))!{result, self(), Ref, {msg_sent, State#cl_st.nick}},
+            {ok, State}
+    end.
+            
 
 %% executes new incoming message protocol from client perspective
-do_new_incoming_msg(State, _Ref, CliNick, ChatName, Msg) ->
+do_new_incoming_msg(State, _Ref, {T,CliNick}, ChatName, Msg) ->
     %% pass message along to gui
     gen_server:call(list_to_atom(State#cl_st.gui), {msg_to_GUI, ChatName, CliNick, Msg}),
     {ok_msg_received, State}.
 
 %% executes quit protocol from client perspective
 do_quit(State, Ref) ->
-    io:format("client:do_new_nick(...): IMPLEMENT ME~n"),
-    {{dummy_target, dummy_response}, State}.
+    whereis(server)!{self(), Ref, quit},
+    receive
+        {Server, Ref, ack_quit} ->
+            whereis(list_to_atom(State#cl_st.gui))!{self(), Ref, ack_quit},
+            exit(normal)
+    end.
