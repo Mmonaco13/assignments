@@ -67,5 +67,5 @@ do_propegate_message(State, Ref, ClientPID, Message) ->
     ClientPID!{self(), Ref, ack_msg},
     {ok, CliNick} = maps:find(ClientPID, State#chat_st.registrations),
     sendMessage(Ref, Message, State, CliNick, lists:subtract(maps:keys(State#chat_st.registrations),[ClientPID])),
-    NewState = State#chat_st{history = lists:append(State#chat_st.history, [CliNick, Message])},
+    NewState = State#chat_st{history = lists:append(State#chat_st.history, [{CliNick, Message}])},
     NewState.

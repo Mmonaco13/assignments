@@ -134,7 +134,7 @@ do_leave(State, Ref, ChatName) ->
         _ ->
             whereis(server)!{self(), Ref, leave, ChatName},
             receive
-                {Server, Ref, ack_leave} ->
+                {_Server, Ref, ack_leave} ->
                     NewState = State#cl_st{con_ch = maps:remove(ChatName, State#cl_st.con_ch)},
                     whereis(list_to_atom(State#cl_st.gui))!{result, self(), Ref, ok},
                     {ok, NewState}
@@ -150,10 +150,10 @@ do_new_nick(State, Ref, NewNick) ->
         _ -> 
             whereis(server)!{self(), Ref, nick, NewNick},
             receive
-                {Server, Ref, err_nick_used} ->
+                {_Server, Ref, err_nick_used} ->
                     whereis(list_to_atom(State#cl_st.gui))!{result, self(), Ref, err_nick_used},
                     {ok, State};
-                {Server, Ref, ok_nick} ->
+                {_Server, Ref, ok_nick} ->
                     whereis(list_to_atom(State#cl_st.gui))!{result, self(), Ref, ok_nick},
                     NewState = State#cl_st{nick = NewNick},
                     {ok, NewState}
@@ -166,14 +166,14 @@ do_msg_send(State, Ref, ChatName, Message) ->
     {_X, ChatPID} = maps:find(ChatName, State#cl_st.con_ch),
     ChatPID!{self(), Ref, message, Message},
     receive
-        {Chat, Ref, ack_msg} ->
+        {_Chat, Ref, ack_msg} ->
             whereis(list_to_atom(State#cl_st.gui))!{result, self(), Ref, {msg_sent, State#cl_st.nick}},
             {ok, State}
     end.
             
 
 %% executes new incoming message protocol from client perspective
-do_new_incoming_msg(State, _Ref, {T,CliNick}, ChatName, Msg) ->
+do_new_incoming_msg(State, _Ref, CliNick, ChatName, Msg) ->
     %% pass message along to gui
     gen_server:call(list_to_atom(State#cl_st.gui), {msg_to_GUI, ChatName, CliNick, Msg}),
     {ok_msg_received, State}.
@@ -182,7 +182,7 @@ do_new_incoming_msg(State, _Ref, {T,CliNick}, ChatName, Msg) ->
 do_quit(State, Ref) ->
     whereis(server)!{self(), Ref, quit},
     receive
-        {Server, Ref, ack_quit} ->
+        {_Server, Ref, ack_quit} ->
             whereis(list_to_atom(State#cl_st.gui))!{self(), Ref, ack_quit},
             exit(normal)
     end.

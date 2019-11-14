@@ -73,17 +73,16 @@ do_join(ChatName, ClientPID, Ref, State) ->
             NewState2 = State
     end,
     
-    ClientNick = maps:find(ClientPID, State#serv_st.nicks),
+    {_Y, ClientNick} = maps:find(ClientPID, State#serv_st.nicks),
     whereis(list_to_atom(ChatName))!{self(), Ref, register, ClientPID, ClientNick},
-    {X, OldRegList} = maps:find(ChatName, NewState2#serv_st.registrations),
-    NewRegList = lists:append(OldRegList, [ClientPID]),
+    {_X, OldRegList} = maps:find(ChatName, NewState2#serv_st.registrations),
+    NewRegList = lists:append([ClientPID], OldRegList),
     NewState3 = NewState2#serv_st{registrations = maps:update(ChatName, NewRegList, NewState2#serv_st.registrations)},
     NewState3.
 
 %% executes leave protocol from server perspective
 do_leave(ChatName, ClientPID, Ref, State) ->
-    RoomPID = maps:find(ChatName, State#serv_st.chatrooms),
-    {X, OldRegList} = maps:find(ChatName, State#serv_st.registrations),
+    {_X, OldRegList} = maps:find(ChatName, State#serv_st.registrations),
     NewRegList = lists:delete(ClientPID, OldRegList),
     NewState = State#serv_st{registrations = maps:update(ChatName, NewRegList, State#serv_st.registrations)},
     whereis(list_to_atom(ChatName))!{self(), Ref, unregister, ClientPID},
@@ -104,7 +103,8 @@ do_new_nick(State, Ref, ClientPID, NewNick) ->
     case lists:any(Pre, maps:values(State#serv_st.nicks)) of
             false -> 
                 NewState = State#serv_st{nicks = maps:update(ClientPID, NewNick, State#serv_st.nicks)},
-                Pred = fun(K,V) -> lists:keymember(ClientPID, 1, V) end,
+                Pre2 = fun(L) -> L == ClientPID end,
+                Pred = fun(_K,V) -> lists:any(Pre2, V) end,
                 ChatList = maps:keys(maps:filter(Pred, State#serv_st.registrations)),
                 nickNote(Ref, ClientPID, NewNick, ChatList),
                 ClientPID!{self(), Ref, ok_nick},
@@ -117,8 +117,7 @@ do_new_nick(State, Ref, ClientPID, NewNick) ->
 leaveChats(State, _Ref, _ClientPID, []) ->
     State;
 leaveChats(State, Ref, ClientPID, [ChatName|T]) ->
-    RoomPID = maps:find(ChatName, State#serv_st.chatrooms),
-    {X, OldRegList} = maps:find(ChatName, State#serv_st.registrations),
+    {_X, OldRegList} = maps:find(ChatName, State#serv_st.registrations),
     NewRegList = lists:delete(ClientPID, OldRegList),
     NewState = State#serv_st{registrations = maps:update(ChatName, NewRegList, State#serv_st.registrations)},
     whereis(list_to_atom(ChatName))!{self(), Ref, unregister, ClientPID},
@@ -127,7 +126,7 @@ leaveChats(State, Ref, ClientPID, [ChatName|T]) ->
 %% executes client quit protocol from server perspective
 do_client_quit(State, Ref, ClientPID) ->
     NewState = State#serv_st{nicks = maps:remove(ClientPID, State#serv_st.nicks)},
-    Pred = fun(K,V) -> lists:keymember(ClientPID, 1, V) end,
+    Pred = fun(_K,V) -> lists:keymember(ClientPID, 1, V) end,
     ChatList = maps:keys(maps:filter(Pred, State#serv_st.registrations)),
     NewState2 = leaveChats(NewState, Ref, ClientPID, ChatList),
     ClientPID!{self(), Ref, ack_quit},
