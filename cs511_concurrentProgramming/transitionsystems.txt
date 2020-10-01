@@ -1,0 +1,6 @@
+transition systems:
+path fragment: liist of states that are part of a path
+path: like a fragment, but must include start state
+trace: same as a path, but use {a} {a,b} instead of states
+
+Show 2 possible paths
