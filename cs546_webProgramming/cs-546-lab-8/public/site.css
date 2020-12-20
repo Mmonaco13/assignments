@@ -1,0 +1,28 @@
+h1 { /* form search shows*/
+    color: white;
+}
+
+p { /* form search*/
+    color: palegreen;
+    background-color: black;
+}
+
+ul { /* search shows*/
+    list-style-type: square;
+}
+
+img { /* shows */
+    border-radius: 5%;
+}
+
+body { /* form search shows */
+    background-color: grey;
+}
+
+main { /* form search shows */
+    font-style: italic;
+}
+
+button { /* form */
+    background-color: greenyellow;
+}

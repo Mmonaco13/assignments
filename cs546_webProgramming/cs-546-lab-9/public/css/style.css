@@ -1,0 +1,39 @@
+h1 {
+    color: white;
+}
+
+.results {
+    list-style-type: lower-roman;
+}
+
+.is-prime {
+    color: #00E676;
+}
+
+.not-prime {
+    color: #FF3D00;
+}
+
+body {
+    background-color: darkslategray;
+}
+
+header {
+    font-style: oblique;
+}
+
+button {
+    color: purple;
+}
+
+label {
+    color: wheat;
+}
+
+li {
+    font-size: 20px;
+}
+
+main {
+    font-weight: bolder;
+}
